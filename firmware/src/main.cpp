@@ -1,6 +1,6 @@
 #include "USBComposite.h"
 #include "usb_midi_device.h"
-#include <string>
+#include <Arduino.h>
 
 int ledPin = PC13;
 
@@ -19,24 +19,49 @@ const int SpecialMsgHeaderSize = 8;
 uint8 SpecialMsgHeader[SpecialMsgHeaderSize] = {240, 0, 32, 41, 2, 10, 1, 2};
 
 int bytesSkipped = 0;
-std::string text;
+String text;
 
 int hPosition = 0;
 int vPosition = 0;
 
 const int displayWidth = 9;
 const int displayHeight = 2;
-std::string displayStrings[displayHeight][displayWidth];
+String displayStrings[displayHeight][displayWidth];
 
 class myMidi : public USBMIDI {
   virtual void handleNoteOff(unsigned int channel, unsigned int note, unsigned int velocity) {
     Serial1.println("noteOff");
-    //digitalWrite(ledPin, LOW);
   }
 
   virtual void handleNoteOn(unsigned int channel, unsigned int note, unsigned int velocity) {
     Serial1.println("NoteOn");
-    //digitalWrite(ledPin, velocity > 0 ? HIGH : LOW);
+  }
+
+  
+  void clearState() {
+    SpecialMsgEncountered = false;
+    SpecialMsgHeaderPos = 0;
+    SpecialMsgHeaderSuccessful = false;
+    bytesSkipped = 0;
+    readingText = false;
+    text = "";
+    hPosition = 0;
+    vPosition = 0;
+  }
+
+  virtual void handleSysExEnd(void) {
+    Serial1.println("SysExEnd");
+
+    Serial1.println("Display:");
+    for (int i = 0; i < displayHeight; i++) {
+      for (int j = 0; j < displayWidth; j++) {
+        Serial1.print("\"");
+        Serial1.print(displayStrings[i][j].c_str());
+        Serial1.println("\"");
+      }
+    }
+
+    clearState();
   }
 
   virtual void handleSysExData(unsigned char data) {
@@ -55,8 +80,8 @@ class myMidi : public USBMIDI {
         readingText = false;
         text = "";
       } else {
-        std::string tmpStr;
-        tmpStr = data;
+        char data2 = data;
+        String tmpStr(data2);
         
         text = text + tmpStr;
       }
@@ -120,47 +145,11 @@ class myMidi : public USBMIDI {
       }
     }
   }
-
-  void clearState() {
-    SpecialMsgEncountered = false;
-    SpecialMsgHeaderPos = 0;
-    SpecialMsgHeaderSuccessful = false;
-    bytesSkipped = 0;
-    readingText = false;
-    text = "";
-    hPosition = 0;
-    vPosition = 0;
-  }
-
-  virtual void handleSysExEnd(void) {
-    Serial1.println("SysExEnd");
-
-    Serial1.println("Display:");
-    for (int i = 0; i < displayHeight; i++) {
-      for (int j = 0; j < displayWidth; j++) {
-        Serial1.print("\"");
-        Serial1.print(displayStrings[i][j].c_str());
-        Serial1.println("\"");
-      }
-    }
-
-    clearState();
-  }
-
-  virtual void handleControlChange(unsigned int channel, unsigned int controller, unsigned int value)
-  {
-    /*Serial1.print("CC ");
-    Serial1.print(channel);
-    Serial1.print(" ");
-    Serial1.print(controller);
-    Serial1.print(" ");
-    Serial1.println(value);*/
-  }
-
-  public:
+  
+public:
 
   void dispatchPacket2(uint32 p)
-{
+  {
     union EVENT_t e;
 
     e.i=p;
@@ -266,31 +255,24 @@ class myMidi : public USBMIDI {
               Serial1.print("Invalid SysEx packet ");
               Serial1.println(e.p.cin);
             break;
-    }
-}
-
+      }
+  }
 
   // Try to read data from USB port & pass anything read to processing function
   void poll(void)
-  {   while(available()) {
+  {
+       while(available()) {
           dispatchPacket2(readPacket());
       }
   }
 };
-
-
-const uint8_t notes[] = {60, 62, 64, 65, 67, 69, 71, 72, 61, 63, 66, 68, 70};
-const int numNotes = sizeof(notes)/sizeof(*notes);
 
 myMidi midi;
 USBCompositeSerial CompositeSerial;
 
 
 void setup() {
-  //pinMode(ledPin, OUTPUT);
-
-  //digitalWrite(ledPin, LOW);
-  delay(300);
+  //delay(300);
 
   Serial1.begin(115200);
   Serial1.println("Setup");
@@ -305,10 +287,4 @@ void setup() {
 void loop() {
   //Serial1.println("loop");
   midi.poll();
-
-  /*for (int i=0;i<numNotes;i++) {
-    midi.sendNoteOn(0, notes[i], 127);
-    delay(200);
-    midi.sendNoteOff(0, notes[i], 127);
-  }*/
 }
