@@ -2,6 +2,31 @@
 #include "usb_midi_device.h"
 #include <Arduino.h>
 
+
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|
+//STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9| |PA15 |PB5  |PB4  |PB3   | **ALT-SPI1**
+
+
+#define LCD_CS PB8
+#define LCD_CD PB7
+#define LCD_WR PB6
+#define LCD_RD PB0
+#define LCD_RESET PB9
+
+#include <SPI.h>
+#include "Adafruit_GFX.h"
+#include <MCUFRIEND_kbv.h>
+MCUFRIEND_kbv tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
+
+#define	BLACK   0x0000
+#define	BLUE    0x001F
+#define	RED     0xF800
+#define	GREEN   0x07E0
+#define CYAN    0x07FF
+#define MAGENTA 0xF81F
+#define YELLOW  0xFFE0
+#define WHITE   0xFFFF
+
 int ledPin = PC13;
 
 union EVENT_t {
@@ -27,6 +52,23 @@ int vPosition = 0;
 const int displayWidth = 9;
 const int displayHeight = 2;
 String displayStrings[displayHeight][displayWidth];
+
+void printmsg(int x, int y, const char *msg)
+{
+  const int xDist = 120;
+  const int yDist = 50;
+  const int yValDist = 30;
+
+  int xout = 2 + xDist * (x % 4);
+  int yout = 2 + yDist * (2 * (x / 4)) + yValDist * y;
+
+  tft.fillRect(xout, yout, 114, 25, BLACK);
+
+  tft.setTextSize(2);
+  tft.setTextColor(YELLOW, BLACK);
+  tft.setCursor(xout + 3, yout + 3);
+  tft.println(msg);
+}
 
 class myMidi : public USBMIDI {
   virtual void handleNoteOff(unsigned int channel, unsigned int note, unsigned int velocity) {
@@ -55,9 +97,7 @@ class myMidi : public USBMIDI {
     Serial1.println("Display:");
     for (int i = 0; i < displayHeight; i++) {
       for (int j = 0; j < displayWidth; j++) {
-        Serial1.print("\"");
-        Serial1.print(displayStrings[i][j].c_str());
-        Serial1.println("\"");
+        printmsg(j, i, displayStrings[i][j].c_str());
       }
     }
 
@@ -270,16 +310,23 @@ public:
 myMidi midi;
 USBCompositeSerial CompositeSerial;
 
-
 void setup() {
-  //delay(300);
-
   Serial1.begin(115200);
   Serial1.println("Setup");
 
   midi.registerComponent();
   CompositeSerial.registerComponent();
   USBComposite.begin();
+
+  uint16_t ID = tft.readID();
+  Serial1.print("ID = 0x");
+  Serial1.println(ID, HEX);
+  if (ID == 0xD3D3) ID = 0x9481; // write-only shield
+  tft.begin(ID);
+
+  tft.setRotation(1);
+  tft.invertDisplay(true);
+  tft.fillScreen(WHITE);
 
   Serial1.println("setup done");
 }
