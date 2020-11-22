@@ -29,6 +29,8 @@ class SysexParser
 
     DisplayStringsT displayStrings;
 
+    bool displayNeedsRefresh = false;
+
     void clearState()
     {
         SpecialMsgEncountered = false;
@@ -51,9 +53,13 @@ public:
     {
         Serial1.println("SysExEnd");
 
-        if (onParamRefreshHandler)
-        {
-            onParamRefreshHandler(displayStrings);
+        if (displayNeedsRefresh) {
+            displayNeedsRefresh = false;
+
+            if (onParamRefreshHandler)
+            {
+                onParamRefreshHandler(displayStrings);
+            }
         }
 
         clearState();
@@ -73,6 +79,7 @@ public:
 
                 displayStrings[vPosition][hPosition] = text;
 
+                displayNeedsRefresh = true;
                 SpecialMsgHeaderSuccessful = true;
                 bytesSkipped = 0;
                 readingText = false;
@@ -84,6 +91,11 @@ public:
                 String tmpStr(data2);
 
                 text = text + tmpStr;
+
+                //Serial1.print("Found character ");
+                //Serial1.print(tmpStr.c_str());
+                //Serial1.print("; text so far: ");
+                //Serial1.println(text.c_str());
             }
         }
         else if (SpecialMsgHeaderSuccessful)
@@ -144,7 +156,7 @@ public:
             {
                 SpecialMsgHeaderPos++;
 
-                Serial1.println("Advancing header cursor!");
+                //Serial1.println("Advancing header cursor!");
 
                 if (SpecialMsgHeaderPos > SpecialMsgHeaderSize - 1)
                 {

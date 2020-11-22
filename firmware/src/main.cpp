@@ -28,6 +28,20 @@ void onSysexEnd()
   sysexParser.handleSysExEnd();
 }
 
+const int encoder0Cc = 21;
+
+void onCc(unsigned int channel, unsigned int controller, unsigned int value)
+{
+  if (controller >= encoder0Cc && controller < encoder0Cc + 8) {
+    Serial1.print("Encoder value: ");
+    Serial1.print(controller - encoder0Cc);
+    Serial1.print(" = ");
+    Serial1.println(value);
+
+    display.showValue(controller - encoder0Cc, value);
+  }
+}
+
 void setup()
 {
   Serial1.begin(115200);
@@ -38,6 +52,7 @@ void setup()
 
   midi.setOnSysexDataHandler(onSysexData);
   midi.setOnSysexEndHandler(onSysexEnd);
+  midi.setOnCcHandler(onCc);
   sysexParser.setOnParamRefreshHandler(onParamRefreshHandler);
 
   Serial1.println("Setup done");

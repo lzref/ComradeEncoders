@@ -15,11 +15,13 @@ union EVENT_t
 
 typedef void (*onSysexDataHandlerT)(unsigned char data);
 typedef void (*onSysexEndHandlerT)(void);
+typedef void (*onCcHandlerT)(unsigned int channel, unsigned int controller, unsigned int value);
 
 class myMidi : public USBMIDI
 {
     onSysexDataHandlerT onSysexDataHandler = 0;
     onSysexEndHandlerT onSysexEndHandler = 0;
+    onCcHandlerT onCcHandler = 0;
 
     USBCompositeSerial CompositeSerial;
 
@@ -31,6 +33,12 @@ class myMidi : public USBMIDI
     virtual void handleNoteOn(unsigned int channel, unsigned int note, unsigned int velocity)
     {
         Serial1.println("NoteOn");
+    }
+
+    void handleControlChange(unsigned int channel, unsigned int controller, unsigned int value) {
+        if (onCcHandler) {
+            onCcHandler(channel, controller, value);
+        }
     }
 
     virtual void handleSysExEnd(void)
@@ -59,6 +67,11 @@ public:
     {
         onSysexDataHandler = handler;
     }
+    
+    void setOnCcHandler(onCcHandlerT handler)
+    {
+        onCcHandler = handler;
+    }
 
     void setup()
     {
@@ -75,24 +88,24 @@ public:
         switch (e.p.cin)
         {
         case CIN_SYSEX:
-            Serial1.println("SysEx");
+            //Serial1.println("SysEx");
             handleSysExData(e.p.midi0);
             handleSysExData(e.p.midi1);
             handleSysExData(e.p.midi2);
             break;
         case CIN_SYSEX_ENDS_IN_1:
-            Serial1.println("SysEx1");
+            //Serial1.println("SysEx1");
             handleSysExData(e.p.midi0);
             handleSysExEnd();
             break;
         case CIN_SYSEX_ENDS_IN_2:
-            Serial1.println("SysEx2");
+            //Serial1.println("SysEx2");
             handleSysExData(e.p.midi0);
             handleSysExData(e.p.midi1);
             handleSysExEnd();
             break;
         case CIN_SYSEX_ENDS_IN_3:
-            Serial1.println("SysEx3");
+            //Serial1.println("SysEx3");
             handleSysExData(e.p.midi0);
             handleSysExData(e.p.midi1);
             handleSysExData(e.p.midi2);

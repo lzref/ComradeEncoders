@@ -24,6 +24,10 @@
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 
+const int xDist = 120;
+const int yDist = 50;
+const int yValDist = 30;
+
 class Display: MCUFRIEND_kbv {
 public:
     Display(): MCUFRIEND_kbv(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET) {
@@ -31,10 +35,6 @@ public:
 
     void printmsg(int x, int y, const char *msg)
     {
-        const int xDist = 120;
-        const int yDist = 50;
-        const int yValDist = 30;
-
         int xout = 2 + xDist * (x % 4);
         int yout = 2 + yDist * (2 * (x / 4)) + yValDist * y;
 
@@ -44,6 +44,15 @@ public:
         setTextColor(YELLOW, BLACK);
         setCursor(xout + 3, yout + 3);
         println(msg);
+    }
+
+    void showValue(int x, int value)
+    {
+        int xout = 2 + xDist * (x % 4);
+        int yout = 2 + yDist * (2 * (x / 4)) + 2 * yValDist;
+
+        fillRect(xout, yout, 114, 25, BLACK);
+        fillRect(xout + 2, yout + 2, 110 * value / 127, 21, YELLOW);
     }
 
     void setup() {
