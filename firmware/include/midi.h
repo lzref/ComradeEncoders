@@ -27,12 +27,12 @@ class myMidi : public USBMIDI
 
     virtual void handleNoteOff(unsigned int channel, unsigned int note, unsigned int velocity)
     {
-        Serial1.println("noteOff");
+        DBGL("noteOff");
     }
 
     virtual void handleNoteOn(unsigned int channel, unsigned int note, unsigned int velocity)
     {
-        Serial1.println("NoteOn");
+        DBGL("NoteOn");
     }
 
     void handleControlChange(unsigned int channel, unsigned int controller, unsigned int value) {
@@ -88,31 +88,31 @@ public:
         switch (e.p.cin)
         {
         case CIN_SYSEX:
-            //Serial1.println("SysEx");
+            //DBGL("SysEx");
             handleSysExData(e.p.midi0);
             handleSysExData(e.p.midi1);
             handleSysExData(e.p.midi2);
             break;
         case CIN_SYSEX_ENDS_IN_1:
-            //Serial1.println("SysEx1");
+            //DBGL("SysEx1");
             handleSysExData(e.p.midi0);
             handleSysExEnd();
             break;
         case CIN_SYSEX_ENDS_IN_2:
-            //Serial1.println("SysEx2");
+            //DBGL("SysEx2");
             handleSysExData(e.p.midi0);
             handleSysExData(e.p.midi1);
             handleSysExEnd();
             break;
         case CIN_SYSEX_ENDS_IN_3:
-            //Serial1.println("SysEx3");
+            //DBGL("SysEx3");
             handleSysExData(e.p.midi0);
             handleSysExData(e.p.midi1);
             handleSysExData(e.p.midi2);
             handleSysExEnd();
             break;
         case CIN_3BYTE_SYS_COMMON:
-            Serial1.println("CIN_3BYTE_SYS_COMMON");
+            DBGL("CIN_3BYTE_SYS_COMMON");
             if (e.p.midi0 == MIDIv1_SONG_POSITION_PTR)
             {
                 handleSongPosition(((uint16)e.p.midi2) << 7 | ((uint16)e.p.midi1));
@@ -120,7 +120,7 @@ public:
             break;
 
         case CIN_2BYTE_SYS_COMMON:
-            Serial1.println("CIN_2BYTE_SYS_COMMON");
+            DBGL("CIN_2BYTE_SYS_COMMON");
             switch (e.p.midi0)
             {
             case MIDIv1_SONG_SELECT:
@@ -181,15 +181,15 @@ public:
                 break;
 
             default:
-                Serial1.print("Invalid CIN_1BYTE packet ");
-                Serial1.println(e.p.midi0);
+                DBG("Invalid CIN_1BYTE packet: ");
+                DBGL(e.p.midi0);
                 break;
             }
             break;
 
         default:
-            Serial1.print("Invalid SysEx packet ");
-            Serial1.println(e.p.cin);
+            DBG("Invalid SysEx packet ");
+            DBGL(e.p.cin);
             break;
         }
     }

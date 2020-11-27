@@ -5,6 +5,7 @@
 #include <SPI.h>
 #include "Adafruit_GFX.h"
 #include <MCUFRIEND_kbv.h>
+#include "Debug.h"
 
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|
 //STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9| |PA15 |PB5  |PB4  |PB3   | **ALT-SPI1**
@@ -57,8 +58,8 @@ public:
 
     void setup() {
         uint16_t ID = readID();
-        Serial1.print("ID = 0x");
-        Serial1.println(ID, HEX);
+        DBG("ID = 0x");
+        DBGFL(ID, HEX);
         if (ID == 0xD3D3) ID = 0x9481; // write-only shield
         begin(ID);
 

@@ -2,6 +2,7 @@
 #define _SYSEX_PARSER_H_
 
 #include <Arduino.h>
+#include "Debug.h"
 
 const int SpecialMsgHeaderSize = 8;
 const int displayWidth = 9;
@@ -59,15 +60,15 @@ public:
 
     virtual void handleSysExEnd(void)
     {
-        Serial1.println("SysExEnd");
+        DBGL("SysExEnd");
 
-        Serial1.println("Colors:");
+        DBGL("Colors:");
         for (int i = 0; i < displayHeight; i++) {
             for (int j = 0; j < displayWidth; j++) {
-                Serial1.print(displayColors[i][j]);
-                Serial1.print(" ");
+                DBG(displayColors[i][j]);
+                DBG(" ");
             }
-            Serial1.println(" ");
+            DBGL(" ");
         }
 
         clearState();
@@ -75,27 +76,27 @@ public:
 
     virtual void handleSysExData(unsigned char data)
     {
-        Serial1.print("SysExData ");
-        Serial1.println(data, HEX);
+        DBG("SysExData ");
+        DBGFL(data, HEX);
 
         if (readingText)
         {
             if (0 == data)
             {
                 if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                    Serial1.print("Ignoring text property with invalid position (");
-                    Serial1.print(hPosition);
-                    Serial1.print(", ");
-                    Serial1.print(vPosition);
-                    Serial1.print("): ");
-                    Serial1.println(text.c_str());
+                    DBG("Ignoring text property with invalid position (");
+                    DBG(hPosition);
+                    DBG(", ");
+                    DBG(vPosition);
+                    DBG("): ");
+                    DBGL(text.c_str());
                 } else {
-                    Serial1.print("Finished reading text property (");
-                    Serial1.print(hPosition);
-                    Serial1.print(", ");
-                    Serial1.print(vPosition);
-                    Serial1.print("): ");
-                    Serial1.println(text.c_str());
+                    DBG("Finished reading text property (");
+                    DBG(hPosition);
+                    DBG(", ");
+                    DBG(vPosition);
+                    DBG("): ");
+                    DBGL(text.c_str());
 
                     displayStrings[vPosition][hPosition] = text;
 
@@ -118,27 +119,27 @@ public:
 
                 text = text + tmpStr;
 
-                //Serial1.print("Found character ");
-                //Serial1.print(tmpStr.c_str());
-                //Serial1.print("; text so far: ");
-                //Serial1.println(text.c_str());
+                //DBG("Found character ");
+                //DBG(tmpStr.c_str());
+                //DBG("; text so far: ");
+                //DBGL(text.c_str());
             }
         }
         else if (readingColor) {
             if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                Serial1.print("Ignoring color property with invalid position (");
-                Serial1.print(hPosition);
-                Serial1.print(", ");
-                Serial1.print(vPosition);
-                Serial1.print("): ");
-                Serial1.println(data);
+                DBG("Ignoring color property with invalid position (");
+                DBG(hPosition);
+                DBG(", ");
+                DBG(vPosition);
+                DBG("): ");
+                DBGL(data);
             } else {
-                Serial1.print("Finished reading color property (");
-                Serial1.print(hPosition);
-                Serial1.print(", ");
-                Serial1.print(vPosition);
-                Serial1.print("): ");
-                Serial1.println(data);
+                DBG("Finished reading color property (");
+                DBG(hPosition);
+                DBG(", ");
+                DBG(vPosition);
+                DBG("): ");
+                DBGL(data);
 
                 displayColors[vPosition][hPosition] = data;
             }
@@ -152,19 +153,19 @@ public:
         }
         else if (readingValue) {
             if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                Serial1.print("Ignoring value property with invalid position (");
-                Serial1.print(hPosition);
-                Serial1.print(", ");
-                Serial1.print(vPosition);
-                Serial1.print("): ");
-                Serial1.println(data);
+                DBG("Ignoring value property with invalid position (");
+                DBG(hPosition);
+                DBG(", ");
+                DBG(vPosition);
+                DBG("): ");
+                DBGL(data);
             } else {
-                Serial1.print("Finished reading value property (");
-                Serial1.print(hPosition);
-                Serial1.print(", ");
-                Serial1.print(vPosition);
-                Serial1.print("): ");
-                Serial1.println(data);
+                DBG("Finished reading value property (");
+                DBG(hPosition);
+                DBG(", ");
+                DBG(vPosition);
+                DBG("): ");
+                DBGL(data);
             }
             
             SpecialMsgHeaderSuccessful = true;
@@ -189,8 +190,8 @@ public:
                         break;
 
                     default:
-                        Serial1.print("Unexpected property type: ");
-                        Serial1.println(data);
+                        DBG("Unexpected property type: ");
+                        DBGL(data);
                         clearState();
                         break;
 
@@ -202,36 +203,36 @@ public:
 
                 switch (propertyType) {
                     case 1:
-                        Serial1.print("Skipping finished. Reading text (");
-                        Serial1.print(hPosition);
-                        Serial1.print(", ");
-                        Serial1.print(vPosition);
-                        Serial1.println(")...");
+                        DBG("Skipping finished. Reading text (");
+                        DBG(hPosition);
+                        DBG(", ");
+                        DBG(vPosition);
+                        DBGL(")...");
                         readingText = true;
                         text = "";
                         break;
 
                     case 2:
-                        Serial1.print("Skipping finished. Reading color (");
-                        Serial1.print(hPosition);
-                        Serial1.print(", ");
-                        Serial1.print(vPosition);
-                        Serial1.println(")...");
+                        DBG("Skipping finished. Reading color (");
+                        DBG(hPosition);
+                        DBG(", ");
+                        DBG(vPosition);
+                        DBGL(")...");
                         readingColor = true;
                         break;
 
                     case 3:
-                        Serial1.print("Skipping finished. Reading value (");
-                        Serial1.print(hPosition);
-                        Serial1.print(", ");
-                        Serial1.print(vPosition);
-                        Serial1.println(")...");
+                        DBG("Skipping finished. Reading value (");
+                        DBG(hPosition);
+                        DBG(", ");
+                        DBG(vPosition);
+                        DBGL(")...");
                         readingValue = true;
                         break;
 
                     default:
-                        Serial1.print("Unexpected property type: ");
-                        Serial1.println(data);
+                        DBG("Unexpected property type: ");
+                        DBGL(data);
                         clearState();
                         break;
                 }
@@ -242,7 +243,7 @@ public:
         }
         else if (!SpecialMsgEncountered && data == SpecialMsgHeader[0])
         {
-            Serial1.println("Detected first byte!");
+            DBGL("Detected first byte!");
             SpecialMsgEncountered = true;
             SpecialMsgHeaderPos++;
         }
@@ -252,20 +253,20 @@ public:
             {
                 SpecialMsgHeaderPos++;
 
-                //Serial1.println("Advancing header cursor!");
+                //DBGL("Advancing header cursor!");
 
                 if (SpecialMsgHeaderPos > SpecialMsgHeaderSize - 1)
                 {
                     SpecialMsgHeaderPos = 0;
                     bytesSkipped = 0;
                     SpecialMsgHeaderSuccessful = true;
-                    Serial1.println("Finished reading header!");
+                    DBGL("Finished reading header!");
                 }
             }
             else
             {
-                Serial1.print("Unknown message encountered. Expected: ");
-                Serial1.println(SpecialMsgHeader[SpecialMsgHeaderPos]);
+                DBG("Unknown message encountered. Expected: ");
+                DBGL(SpecialMsgHeader[SpecialMsgHeaderPos]);
                 clearState();
             }
         }

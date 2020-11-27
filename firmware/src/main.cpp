@@ -36,10 +36,10 @@ const int encoder0Cc = 21;
 void onCc(unsigned int channel, unsigned int controller, unsigned int value)
 {
   if (controller >= encoder0Cc && controller < encoder0Cc + 8) {
-    Serial1.print("Encoder value: ");
-    Serial1.print(controller - encoder0Cc);
-    Serial1.print(" = ");
-    Serial1.println(value);
+    DBG("Encoder value: ");
+    DBG(controller - encoder0Cc);
+    DBG(" = ");
+    DBGL(value);
 
     display.showValue(controller - encoder0Cc, value);
     encoder0Value = value;
@@ -53,8 +53,8 @@ void timerIsr() {
 
 void setup()
 {
-  Serial1.begin(115200);
-  Serial1.println("Setup");
+  DBG_INIT();
+  DBGL("Setup");
 
   midi.setup();
   display.setup();
@@ -67,7 +67,7 @@ void setup()
   //attachInterrupt(digitalPinToInterrupt(PB13), timerIsr, CHANGE);
   //attachInterrupt(digitalPinToInterrupt(PB14), timerIsr, CHANGE);
 
-  Serial1.println("Setup done");
+  DBGL("Setup done");
 }
 
 void loop()
@@ -83,7 +83,7 @@ void loop()
 
   if (encoder0Delta != 0) {
     midi.sendControlChange(15, encoder0Cc, encoder0Relative);
-    Serial1.print("Sending encoder val: ");
-    Serial1.println(encoder0Relative);
+    DBG("Sending encoder val: ");
+    DBGL(encoder0Relative);
   }
 }
