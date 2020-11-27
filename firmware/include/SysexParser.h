@@ -74,11 +74,24 @@ public:
         {
             if (0 == data)
             {
-                Serial1.print("Finished reading text: ");
-                Serial1.println(text.c_str());
+                if (hPosition >= displayWidth || vPosition >= displayHeight) {
+                    Serial1.print("Ignoring text with invalid position (");
+                    Serial1.print(hPosition);
+                    Serial1.print(", ");
+                    Serial1.print(vPosition);
+                    Serial1.print("): ");
+                    Serial1.println(text.c_str());
+                } else {
+                    Serial1.print("Finished reading text (");
+                    Serial1.print(hPosition);
+                    Serial1.print(", ");
+                    Serial1.print(vPosition);
+                    Serial1.print("): ");
+                    Serial1.println(text.c_str());
 
-                displayStrings[vPosition][hPosition] = text;
-
+                    displayStrings[vPosition][hPosition] = text;
+                }
+                
                 displayNeedsRefresh = true;
                 SpecialMsgHeaderSuccessful = true;
                 bytesSkipped = 0;
@@ -103,16 +116,7 @@ public:
             switch (bytesSkipped)
             {
             case 0:
-                if (data >= displayWidth)
-                {
-                    Serial1.print("Invalid hPosition: ");
-                    Serial1.println(data);
-                    clearState();
-                }
-                else
-                {
-                    hPosition = data;
-                }
+                hPosition = data;
                 break;
 
             case 1:
@@ -125,17 +129,8 @@ public:
                 break;
 
             default:
-                if (data >= displayHeight)
-                {
-                    Serial1.print("Invalid vPosition: ");
-                    Serial1.println(data);
-                    clearState();
-                }
-                else
-                {
-                    vPosition = data;
-                }
-
+                vPosition = data;
+                
                 Serial1.println("Skipping finished. Reading text...");
                 readingText = true;
                 text = "";
