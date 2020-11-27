@@ -8,12 +8,12 @@ const int displayWidth = 9;
 const int displayHeight = 2;
 
 typedef String DisplayStringsT[displayHeight][displayWidth];
-typedef void (*onParamRefreshHandlerT)(DisplayStringsT displayStrings);
+typedef void (*onTextRefreshHandlerT)(int hPosition, int vPosition, String text);
 typedef uint8_t ColorIndexT;
 
 class SysexParser
 {
-    onParamRefreshHandlerT onParamRefreshHandler = 0;
+    onTextRefreshHandlerT onTextRefreshHandler = 0;
 
     bool SpecialMsgEncountered = false;
     bool SpecialMsgHeaderSuccessful = false;
@@ -35,8 +35,6 @@ class SysexParser
 
     ColorIndexT displayColors[displayHeight][displayWidth];
 
-    bool displayNeedsRefresh = false;
-
     void clearState()
     {
         SpecialMsgEncountered = false;
@@ -53,23 +51,15 @@ class SysexParser
     }
 
 public:
-    void setOnParamRefreshHandler(onParamRefreshHandlerT handler)
+
+    void setOnTextRefreshHandler(onTextRefreshHandlerT handler)
     {
-        onParamRefreshHandler = handler;
+        onTextRefreshHandler = handler;
     }
 
     virtual void handleSysExEnd(void)
     {
         Serial1.println("SysExEnd");
-
-        if (displayNeedsRefresh) {
-            displayNeedsRefresh = false;
-
-            if (onParamRefreshHandler)
-            {
-                onParamRefreshHandler(displayStrings);
-            }
-        }
 
         Serial1.println("Colors:");
         for (int i = 0; i < displayHeight; i++) {
@@ -108,9 +98,12 @@ public:
                     Serial1.println(text.c_str());
 
                     displayStrings[vPosition][hPosition] = text;
+
+                    if (onTextRefreshHandler) {
+                        onTextRefreshHandler(hPosition, vPosition, text);
+                    }
                 }
                 
-                displayNeedsRefresh = true;
                 SpecialMsgHeaderSuccessful = true;
                 bytesSkipped = 0;
                 readingText = false;
@@ -150,7 +143,6 @@ public:
                 displayColors[vPosition][hPosition] = data;
             }
             
-            displayNeedsRefresh = true;
             SpecialMsgHeaderSuccessful = true;
             bytesSkipped = 0;
             readingText = false;
@@ -175,7 +167,6 @@ public:
                 Serial1.println(data);
             }
             
-            displayNeedsRefresh = true;
             SpecialMsgHeaderSuccessful = true;
             bytesSkipped = 0;
             readingText = false;

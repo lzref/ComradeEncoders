@@ -16,15 +16,9 @@ ClickEncoder encoder(PB13, PB14, PB15);
 
 int encoder0Value = 0;
 
-void onParamRefreshHandler(DisplayStringsT displayStrings)
+void onTextRefreshHandler(int hPosition, int vPosition, String text)
 {
-  for (int i = 0; i < displayHeight; i++)
-  {
-    for (int j = 0; j < displayWidth; j++)
-    {
-      display.printmsg(j, i, displayStrings[i][j].c_str());
-    }
-  }
+  display.printmsg(hPosition, vPosition, text.c_str());
 }
 
 void onSysexData(unsigned char data)
@@ -68,7 +62,7 @@ void setup()
   midi.setOnSysexDataHandler(onSysexData);
   midi.setOnSysexEndHandler(onSysexEnd);
   midi.setOnCcHandler(onCc);
-  sysexParser.setOnParamRefreshHandler(onParamRefreshHandler);
+  sysexParser.setOnTextRefreshHandler(onTextRefreshHandler);
 
   //attachInterrupt(digitalPinToInterrupt(PB13), timerIsr, CHANGE);
   //attachInterrupt(digitalPinToInterrupt(PB14), timerIsr, CHANGE);
