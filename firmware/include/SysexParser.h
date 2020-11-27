@@ -9,6 +9,7 @@ const int displayHeight = 2;
 
 typedef String DisplayStringsT[displayHeight][displayWidth];
 typedef void (*onParamRefreshHandlerT)(DisplayStringsT displayStrings);
+typedef uint8_t ColorIndexT;
 
 class SysexParser
 {
@@ -17,7 +18,10 @@ class SysexParser
     bool SpecialMsgEncountered = false;
     bool SpecialMsgHeaderSuccessful = false;
     bool readingText = false;
+    bool readingColor = false;
+    bool readingValue = false;
     int SpecialMsgHeaderPos = 0;
+    int propertyType = 0;
 
     uint8 SpecialMsgHeader[SpecialMsgHeaderSize] = {240, 0, 32, 41, 2, 10, 1, 2};
 
@@ -28,6 +32,8 @@ class SysexParser
     int vPosition = 0;
 
     DisplayStringsT displayStrings;
+
+    ColorIndexT displayColors[displayHeight][displayWidth];
 
     bool displayNeedsRefresh = false;
 
@@ -41,6 +47,9 @@ class SysexParser
         text = "";
         hPosition = 0;
         vPosition = 0;
+        readingColor = false;
+        readingValue = false;
+        propertyType = 0;
     }
 
 public:
@@ -62,6 +71,15 @@ public:
             }
         }
 
+        Serial1.println("Colors:");
+        for (int i = 0; i < displayHeight; i++) {
+            for (int j = 0; j < displayWidth; j++) {
+                Serial1.print(displayColors[i][j]);
+                Serial1.print(" ");
+            }
+            Serial1.println(" ");
+        }
+
         clearState();
     }
 
@@ -75,14 +93,14 @@ public:
             if (0 == data)
             {
                 if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                    Serial1.print("Ignoring text with invalid position (");
+                    Serial1.print("Ignoring text property with invalid position (");
                     Serial1.print(hPosition);
                     Serial1.print(", ");
                     Serial1.print(vPosition);
                     Serial1.print("): ");
                     Serial1.println(text.c_str());
                 } else {
-                    Serial1.print("Finished reading text (");
+                    Serial1.print("Finished reading text property (");
                     Serial1.print(hPosition);
                     Serial1.print(", ");
                     Serial1.print(vPosition);
@@ -96,6 +114,8 @@ public:
                 SpecialMsgHeaderSuccessful = true;
                 bytesSkipped = 0;
                 readingText = false;
+                readingColor = false;
+                readingValue = false;
                 text = "";
             }
             else
@@ -111,6 +131,58 @@ public:
                 //Serial1.println(text.c_str());
             }
         }
+        else if (readingColor) {
+            if (hPosition >= displayWidth || vPosition >= displayHeight) {
+                Serial1.print("Ignoring color property with invalid position (");
+                Serial1.print(hPosition);
+                Serial1.print(", ");
+                Serial1.print(vPosition);
+                Serial1.print("): ");
+                Serial1.println(data);
+            } else {
+                Serial1.print("Finished reading color property (");
+                Serial1.print(hPosition);
+                Serial1.print(", ");
+                Serial1.print(vPosition);
+                Serial1.print("): ");
+                Serial1.println(data);
+
+                displayColors[vPosition][hPosition] = data;
+            }
+            
+            displayNeedsRefresh = true;
+            SpecialMsgHeaderSuccessful = true;
+            bytesSkipped = 0;
+            readingText = false;
+            readingColor = false;
+            readingValue = false;
+            text = "";
+        }
+        else if (readingValue) {
+            if (hPosition >= displayWidth || vPosition >= displayHeight) {
+                Serial1.print("Ignoring value property with invalid position (");
+                Serial1.print(hPosition);
+                Serial1.print(", ");
+                Serial1.print(vPosition);
+                Serial1.print("): ");
+                Serial1.println(data);
+            } else {
+                Serial1.print("Finished reading value property (");
+                Serial1.print(hPosition);
+                Serial1.print(", ");
+                Serial1.print(vPosition);
+                Serial1.print("): ");
+                Serial1.println(data);
+            }
+            
+            displayNeedsRefresh = true;
+            SpecialMsgHeaderSuccessful = true;
+            bytesSkipped = 0;
+            readingText = false;
+            readingColor = false;
+            readingValue = false;
+            text = "";
+        }
         else if (SpecialMsgHeaderSuccessful)
         {
             switch (bytesSkipped)
@@ -120,20 +192,58 @@ public:
                 break;
 
             case 1:
-                if (1 != data)
-                {
-                    Serial1.print("Expected text property byte (0x01). Got: ");
-                    Serial1.println(data);
-                    clearState();
+                switch (data) {
+                    case 1: case 2: case 3:
+                        propertyType = data;
+                        break;
+
+                    default:
+                        Serial1.print("Unexpected property type: ");
+                        Serial1.println(data);
+                        clearState();
+                        break;
+
                 }
                 break;
 
             default:
                 vPosition = data;
-                
-                Serial1.println("Skipping finished. Reading text...");
-                readingText = true;
-                text = "";
+
+                switch (propertyType) {
+                    case 1:
+                        Serial1.print("Skipping finished. Reading text (");
+                        Serial1.print(hPosition);
+                        Serial1.print(", ");
+                        Serial1.print(vPosition);
+                        Serial1.println(")...");
+                        readingText = true;
+                        text = "";
+                        break;
+
+                    case 2:
+                        Serial1.print("Skipping finished. Reading color (");
+                        Serial1.print(hPosition);
+                        Serial1.print(", ");
+                        Serial1.print(vPosition);
+                        Serial1.println(")...");
+                        readingColor = true;
+                        break;
+
+                    case 3:
+                        Serial1.print("Skipping finished. Reading value (");
+                        Serial1.print(hPosition);
+                        Serial1.print(", ");
+                        Serial1.print(vPosition);
+                        Serial1.println(")...");
+                        readingValue = true;
+                        break;
+
+                    default:
+                        Serial1.print("Unexpected property type: ");
+                        Serial1.println(data);
+                        clearState();
+                        break;
+                }
                 break;
             }
 
