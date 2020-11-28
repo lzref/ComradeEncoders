@@ -4,17 +4,19 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "Adafruit_GFX.h"
-#include <MCUFRIEND_kbv.h>
 #include "Debug.h"
 
-//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|
-//STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9| |PA15 |PB5  |PB4  |PB3   | **ALT-SPI1**
+#include <Adafruit_ILI9341.h>
 
-#define LCD_CS PB8
-#define LCD_CD PB7
-#define LCD_WR PB6
-#define LCD_RD PB0
-#define LCD_RESET PB9
+#define TFT_DC PA3
+
+#define TFT_CS 0
+
+#define TFT_MOSI PA7
+#define TFT_CLK PA5
+
+#define TFT_RST 0
+#define TFT_MISO PA6
 
 #define	BLACK   0x0000
 #define	BLUE    0x001F
@@ -25,13 +27,19 @@
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 
-const int xDist = 120;
-const int yDist = 50;
-const int yValDist = 30;
+const int xDist = 80;
+const int yDist = 40;
+const int yValDist = 20;
+const int textSize = 1;
+const int outerBoxSizeX = 76;
+const int outerBoxSizeY = 19;
+const int innerBoxSizeX = outerBoxSizeX - 4;
+const int innerBoxSizeY = outerBoxSizeY - 4;
 
-class Display: MCUFRIEND_kbv {
+
+class Display: Adafruit_ILI9341 {
 public:
-    Display(): MCUFRIEND_kbv(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET) {
+    Display(): Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST) {
     }
 
     void printmsg(int x, int y, const char *msg)
@@ -39,9 +47,9 @@ public:
         int xout = 2 + xDist * (x % 4);
         int yout = 2 + yDist * (2 * (x / 4)) + yValDist * y;
 
-        fillRect(xout, yout, 114, 25, BLACK);
+        fillRect(xout, yout, outerBoxSizeX, outerBoxSizeY, BLACK);
 
-        setTextSize(2);
+        setTextSize(textSize);
         setTextColor(YELLOW, BLACK);
         setCursor(xout + 3, yout + 3);
         println(msg);
@@ -52,20 +60,16 @@ public:
         int xout = 2 + xDist * (x % 4);
         int yout = 2 + yDist * (2 * (x / 4)) + 2 * yValDist;
 
-        fillRect(xout, yout, 114, 25, BLACK);
-        fillRect(xout + 2, yout + 2, 110 * value / 127, 21, YELLOW);
+        fillRect(xout, yout, outerBoxSizeX, outerBoxSizeY, BLACK);
+        fillRect(xout + 2, yout + 2, innerBoxSizeX * value / 127, innerBoxSizeY, YELLOW);
     }
 
     void setup() {
-        uint16_t ID = readID();
-        DBG("ID = 0x");
-        DBGFL(ID, HEX);
-        if (ID == 0xD3D3) ID = 0x9481; // write-only shield
-        begin(ID);
+        begin();
 
-        setRotation(1);
-        invertDisplay(true);
-        fillScreen(WHITE);
+        setRotation(3);
+        //invertDisplay(true);
+        fillScreen(GREEN);
     }
 };
 
