@@ -7,8 +7,10 @@
 Display display;
 myMidi midi;
 SysexParser sysexParser;
+USBCompositeSerial CompositeSerial;
 
 const int numEncoders = 8;
+const int encoder0Cc = 21;
 
 MidiEncoder encoders[numEncoders] = {
     MidiEncoder(21, PB1, PB10, PB11),
@@ -21,9 +23,11 @@ MidiEncoder encoders[numEncoders] = {
     MidiEncoder(28, PA1, PA2, PA0),
 };
 
+int encoderValues[numEncoders] = {0, 0, 0, 0, 0, 0, 0, 0};
+
 void onTextRefreshHandler(int hPosition, int vPosition, String text)
 {
-  display.printmsg(hPosition, vPosition, text.c_str());
+  display.printMessage(hPosition, vPosition, text);
 }
 
 void onSysexData(unsigned char data)
@@ -36,8 +40,6 @@ void onSysexEnd()
   sysexParser.handleSysExEnd();
 }
 
-const int encoder0Cc = 21;
-
 void onCc(unsigned int channel, unsigned int controller, unsigned int value)
 {
   if (controller >= encoder0Cc && controller < encoder0Cc + 8)
@@ -47,9 +49,13 @@ void onCc(unsigned int channel, unsigned int controller, unsigned int value)
     DBG("Received encoder value: ");
     DBG(encoderIndex);
     DBG(" = ");
-    DBGL(value);
+    DBG(value);
+    DBG(". Previous value: ");
+    DBGL(encoderValues[encoderIndex]);
 
-    display.showValue(encoderIndex, value);
+    display.showValue(encoderIndex, encoderValues[encoderIndex], value);
+
+    encoderValues[encoderIndex] = value;
   }
 }
 
@@ -78,8 +84,6 @@ void onEncoderReleasedHandler(unsigned int midiCc)
   DBGL(midiCc);
   midi.sendNoteOff(15, midiCc, 0);
 }
-
-USBCompositeSerial CompositeSerial;
 
 void setup()
 {

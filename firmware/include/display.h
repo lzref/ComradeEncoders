@@ -42,26 +42,62 @@ public:
     Display(): Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST) {
     }
 
-    void printmsg(int x, int y, const char *msg)
+    int boxCoordX(int x, int y)
     {
-        int xout = 2 + xDist * (x % 4);
-        int yout = 2 + yDist * (2 * (x / 4)) + yValDist * y;
+        return 2 + xDist * (x % 4);
+    }
 
-        fillRect(xout, yout, outerBoxSizeX, outerBoxSizeY, BLACK);
+    int boxCoordY(int x, int y)
+    {
+        return 2 + yDist * (2 * (x / 4)) + yValDist * y;
+    }
+
+    String repeatString(String source, unsigned int count)
+    {
+        String result;
+        for (unsigned int i = 0; i <= count; i++) {
+            result += source;
+        }
+
+        return result;
+    }
+
+    void printMessage(int x, int y, String msg)
+    {
+        int xout = boxCoordX(x, y);
+        int yout = boxCoordY(x, y);
+
+        if (msg.length() < 9) {
+            msg += repeatString(String(" "), 9 - msg.length());
+        }
 
         setTextSize(textSize);
         setTextColor(YELLOW, BLACK);
         setCursor(xout + 3, yout + 3);
-        println(msg);
+        println(msg.c_str());
     }
 
-    void showValue(int x, int value)
+    void drawBoundingBox(int x, int y)
     {
-        int xout = 2 + xDist * (x % 4);
-        int yout = 2 + yDist * (2 * (x / 4)) + 2 * yValDist;
+        int xout = boxCoordX(x, y);
+        int yout = boxCoordY(x, y);
 
         fillRect(xout, yout, outerBoxSizeX, outerBoxSizeY, BLACK);
-        fillRect(xout + 2, yout + 2, innerBoxSizeX * value / 127, innerBoxSizeY, YELLOW);
+    }
+
+    void showValue(int x, int oldValue, int newValue)
+    {
+        int xout = boxCoordX(x, 2);
+        int yout = boxCoordY(x, 2);
+
+        int oldValueX = xout + 2 + (innerBoxSizeX * oldValue / 127);
+        int newValueX = xout + 2 + (innerBoxSizeX * newValue / 127);
+
+        if (newValue > oldValue) {
+            fillRect(oldValueX, yout + 2, newValueX - oldValueX, innerBoxSizeY, YELLOW);
+        } else {
+            fillRect(newValueX, yout + 2, oldValueX - newValueX, innerBoxSizeY, BLACK);
+        }
     }
 
     void setup() {
@@ -70,6 +106,12 @@ public:
         fillScreen(GREEN);
         setRotation(3);
         //invertDisplay(true);
+
+        for (int i = 0; i <= 8; i++) {
+            drawBoundingBox(i, 0);
+            drawBoundingBox(i, 1);
+            drawBoundingBox(i, 2);
+        }
     }
 };
 
