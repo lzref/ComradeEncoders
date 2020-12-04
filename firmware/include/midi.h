@@ -23,8 +23,6 @@ class myMidi : public USBMIDI
     onSysexEndHandlerT onSysexEndHandler = 0;
     onCcHandlerT onCcHandler = 0;
 
-    USBCompositeSerial CompositeSerial;
-
     virtual void handleNoteOff(unsigned int channel, unsigned int note, unsigned int velocity)
     {
         DBGL("noteOff");
@@ -76,8 +74,6 @@ public:
     void setup()
     {
         registerComponent();
-        CompositeSerial.registerComponent();
-        USBComposite.begin();
     }
 
     void dispatchPacket(uint32 p)

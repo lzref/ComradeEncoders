@@ -66,14 +66,14 @@ protected:
 const int numEncoders = 8;
 
 MidiEncoder encoders[numEncoders] = {
-  MidiEncoder(21, PC13, PC14, PC15),
-  MidiEncoder(22, PA0, PA1, PA2),
-  MidiEncoder(23, PB0, PB1, PB10),
-  MidiEncoder(24, PB12, PB13, PB11),
-  MidiEncoder(25, PA8, PB15, PB14),
-  MidiEncoder(26, PB3, PA15, PB2),
-  MidiEncoder(27, PB6, PB5, PB4),
-  MidiEncoder(28, PB9, PB8, PB7),
+  MidiEncoder(21, PB1,	PB10,	PB11),
+  MidiEncoder(22, PA15,	PB4,	PB12),
+  MidiEncoder(23, PA10,	PB13,	PA9),
+  MidiEncoder(24, PC14,	PC15,	PC13),
+  MidiEncoder(25, PB6,	PB8,	PB0),
+  MidiEncoder(26, PB9,	PB7,	PB5),
+  MidiEncoder(27, PA8,	PB15,	PB14),
+  MidiEncoder(28, PA1,	PA2,	PA0),
 };
 
 void onTextRefreshHandler(int hPosition, int vPosition, String text)
@@ -107,15 +107,18 @@ void onCc(unsigned int channel, unsigned int controller, unsigned int value)
   }
 }
 
+USBCompositeSerial CompositeSerial;
+
 void setup()
 {
-  DBG_INIT();
-
-  DBGL("Doing MIDI setup...");
-
+  USBComposite.clear();
   midi.setup();
+  CompositeSerial.registerComponent();
+  USBComposite.begin();
 
-  DBGL("...MIDI setup done. Doing display setup...");
+  //delay(5000);
+
+  DBGL("MIDI setup done. Doing display setup...");
 
   display.setup();
 
@@ -127,9 +130,6 @@ void setup()
   sysexParser.setOnTextRefreshHandler(onTextRefreshHandler);
 
   DBGL("...hooks are set up. Setup is finished");
-
-  pinMode(PB3, INPUT_PULLUP);
-  pinMode(PA15, INPUT_PULLUP);
 }
 
 void serviceEncoders()
@@ -147,17 +147,4 @@ void loop()
   midi.poll();
 
   serviceEncoders();
-  //DBGL("loop");
-
-  int pin1 = digitalRead(PB3);
-  int pin2 = digitalRead(PA15);
-
-  /*if (pin1 != lastPin1 || pin2 != lastPin2) {
-    lastPin1 = pin1;
-    lastPin2 = pin2;
-
-    DBG("Encoder pins: ");
-    DBG(pin1);
-    DBGL(pin2);
-  }*/
 }

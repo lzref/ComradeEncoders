@@ -67,9 +67,9 @@ public:
     void setup() {
         begin();
 
+        fillScreen(GREEN);
         setRotation(3);
         //invertDisplay(true);
-        fillScreen(GREEN);
     }
 };
 
