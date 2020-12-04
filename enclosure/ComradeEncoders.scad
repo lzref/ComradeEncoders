@@ -1,3 +1,6 @@
+showTopPanel = false;
+showBottomLid = true;
+
 holeDiam = 3.2;
 
 holeDistXR = 3.4;
@@ -41,6 +44,18 @@ caseSizeX = max(dispOuterX + 2 * lipX, encoderNumX * encoderSpacing);
 caseSizeY = dispOuterY + 2 * lipY + encoderNumY * encoderSpacing;
 
 encoderAreaCoordY = - dispOuterY / 2 - lipY;
+
+screwHoleZOffset = 2.5;
+screwHoleDiam = 2.7;
+screwHoleYOffset = 10;
+
+lidThickness = 2;
+lidLipHeight = 1;
+lidLipThickness = 2;
+lidLipCornerHeight = screwHoleZOffset * 2;
+lidLipCornerLength = (screwHoleYOffset - sideWallThickness) * 2;
+lidLipTaperLength = 5;
+lidLipTaperHeight = lidLipCornerHeight - lidLipHeight;
 
 module displayScrewHole(x, y) {
     color("red")
@@ -132,8 +147,106 @@ module sideWalls() {
         cube([caseSizeX, sideWallThickness, caseHeight]);
 }
 
+module lidTaperPrism() {
+    rotate(-90, [0, 1, 0])
+        linear_extrude(height = sideWallThickness)
+            polygon([[0, 0], [0, lidLipTaperLength], [lidLipTaperHeight, 0]]);
+}
+
+module taperedCorner() {
+    // lip corner
+    color("Red")
+        cube([
+            lidLipCornerLength,
+            lidLipCornerLength,
+            lidLipCornerHeight
+        ]);
+    
+    // lip tapers
+    color("Green") {
+        translate([
+            sideWallThickness,
+            lidLipCornerLength,
+            lidLipHeight
+        ])
+            lidTaperPrism();
+        
+        translate([
+            lidLipCornerLength,
+            0,
+            lidLipHeight
+        ])
+            rotate(-90, [0, 0, 1])
+                lidTaperPrism();
+    }
+}
+
+module twoTaperedCorners() {
+    translate([sideWallThickness, sideWallThickness, 0]) {
+        taperedCorner();
+        
+        translate([caseSizeX - 2 * sideWallThickness, 0, 0])
+            mirror([1, 0, 0])
+                taperedCorner();
+    }
+}
+
+module bottomLid() {
+    translate([0, 0, -lidThickness])
+        cube([caseSizeX, caseSizeY, lidThickness]);
+    
+    // now lip
+    difference() {
+        union() {
+            // base lip
+            color("Cyan")
+                translate([sideWallThickness, sideWallThickness, 0])
+                    cube([
+                        caseSizeX - 2 * sideWallThickness,
+                        caseSizeY - 2 * sideWallThickness,
+                        lidLipHeight
+                    ]);
+            
+            
+            // tapered corners
+            twoTaperedCorners();
+            
+            translate([0, caseSizeY, 0])
+                mirror([0, 1, 0])
+                    twoTaperedCorners();
+        }
+        
+        color("Cyan")
+            translate([
+                sideWallThickness + lidLipThickness,
+                sideWallThickness + lidLipThickness,
+                - d
+            ])
+                cube([
+                    caseSizeX - 2 * (sideWallThickness + lidLipThickness),
+                    caseSizeY - 2 * (sideWallThickness + lidLipThickness),
+                    lidLipCornerHeight + 2 *d
+                ]);
+        
+        // Screw holes
+        translate([
+            caseSizeX / 2, 0, caseHeight
+        ]) {
+            sideScrewHole(sideScrewHoleYOffset);
+            sideScrewHole(caseSizeY - sideScrewHoleYOffset);
+        }
+    }
+}
+
+if (showTopPanel) {
 translate([0, encoderAreaCoordY, thickness / 2])
     topPanel();
+}
+
+if (showBottomLid) {
+    translate([- caseSizeX / 2, -caseSizeY, -caseHeight])
+        bottomLid();
+}
 
 
 module sideScrewHole(y)
@@ -149,26 +262,28 @@ module sideScrewHole(y)
     }
 }
 
-difference() {
-    color("purple")
-        sideWalls();
-    
-    // USB jack hole
-    translate([
-        0,
-        - sideWallThickness / 2,
-        - (caseHeight - usbJackBottomOffset)
-    ])
-        color("cyan")
-            cube(
-                [
-                    usbJackWidth,
-                    sideWallThickness + 2 * d,
-                    usbJackHeight
-                ],
-                center = true
-            );
-    
-    sideScrewHole(- sideScrewHoleYOffset);
-    sideScrewHole(- (caseSizeY - sideScrewHoleYOffset));
+if (showTopPanel) {
+    difference() {
+        color("purple")
+            sideWalls();
+        
+        // USB jack hole
+        translate([
+            0,
+            - sideWallThickness / 2,
+            - (caseHeight - usbJackBottomOffset)
+        ])
+            color("cyan")
+                cube(
+                    [
+                        usbJackWidth,
+                        sideWallThickness + 2 * d,
+                        usbJackHeight
+                    ],
+                    center = true
+                );
+        
+        sideScrewHole(- sideScrewHoleYOffset);
+        sideScrewHole(- (caseSizeY - sideScrewHoleYOffset));
+    }
 }
