@@ -26,3 +26,7 @@ That's it! Ableton should now be able to talk to ComradeEncoders controller.
 If there's an error or something goes wrong, it may appear in this log file:
 
 `C:\Documents and Settings\{your_username}\Application Data\Ableton\Live {version}\Preferences\Log.txt`
+
+or
+
+`C:\Users\{your_username}\AppData\Roaming\Ableton\Live {version}\Preferences\Log.txt`
