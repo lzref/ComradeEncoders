@@ -42,15 +42,21 @@ public:
     void service()
     {
         physicalEncoder.service();
+    }
 
-        int encoderDelta = physicalEncoder.getValue() * 5;
+    void checkForTurns()
+    {
+        int encoderDelta = physicalEncoder.getValue();
         if (encoderDelta != 0)
         {
             if (onEncoderTurnedHandler) {
                 onEncoderTurnedHandler(midiCc, encoderDelta);
             }
         }
+    }
 
+    void checkButtonState()
+    {
         int buttonState = digitalRead(buttonPin);
         int curTime = millis();
         const int debouncePeriod = 20;

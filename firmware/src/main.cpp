@@ -4,6 +4,7 @@
 #include "SysexParser.h"
 #include "MidiEncoder.h"
 
+
 Display display;
 myMidi midi;
 SysexParser sysexParser;
@@ -85,14 +86,20 @@ void onEncoderReleasedHandler(unsigned int midiCc)
   midi.sendNoteOff(15, midiCc, 0);
 }
 
+void serviceEncoders()
+{
+  for (int i = 0; i < numEncoders; i++)
+  {
+    encoders[i].service();
+  }
+}
+
 void setup()
 {
   USBComposite.clear();
   midi.setup();
   CompositeSerial.registerComponent();
   USBComposite.begin();
-
-  //delay(5000);
 
   DBGL("MIDI setup done. Doing display setup...");
 
@@ -112,15 +119,10 @@ void setup()
     encoders[i].setOnEncoderReleasedHandler(onEncoderReleasedHandler);
   }
 
-  DBGL("...hooks are set up. Setup is finished");
-}
+  Timer1.setPeriod(1000);
+  Timer1.attachInterrupt(0, serviceEncoders); 
 
-void serviceEncoders()
-{
-  for (int i = 0; i < numEncoders; i++)
-  {
-    encoders[i].service();
-  }
+  DBGL("...hooks are set up. Setup is finished");
 }
 
 int lastPin1 = HIGH;
@@ -130,5 +132,9 @@ void loop()
 {
   midi.poll();
 
-  serviceEncoders();
+  for (int i = 0; i < numEncoders; i++)
+  {
+    encoders[i].checkForTurns();
+    encoders[i].checkButtonState();
+  }
 }
