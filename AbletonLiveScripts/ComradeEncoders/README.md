@@ -18,7 +18,7 @@ Copy the directory that contains this README.md file (ComradeEncoders) here:
 
 ```C:\Program Files\Ableton\Live {version}\Resources\MIDI Remote Scripts\```
 
-Then open Ableton Live and go to Live => Preferences => MIDI. ComradeEncoders should show up in the dropdown
+Then open Ableton Live and go to Options => Preferences => MIDI. ComradeEncoders should show up in the dropdown
 list for the control surfaces. Choose Maple as Input and Output.
 
 That's it! Ableton should now be able to talk to ComradeEncoders controller.
