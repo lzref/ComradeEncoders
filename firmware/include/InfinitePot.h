@@ -9,7 +9,7 @@ class InfinitePot
 
     int _adcHysteresis = 50;
     int _potSensitivity = 20;
-    int _adcMaxValue = 1024;
+    int _adcMaxValue = 4096;
 
 public:
     InfinitePot() {};

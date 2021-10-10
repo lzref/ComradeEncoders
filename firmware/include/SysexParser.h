@@ -12,6 +12,8 @@ typedef String DisplayStringsT[displayHeight][displayWidth];
 typedef void (*onTextRefreshHandlerT)(int hPosition, int vPosition, String text);
 typedef uint8_t ColorIndexT;
 
+// #define SYSEX_DBG 1
+
 class SysexParser
 {
     onTextRefreshHandlerT onTextRefreshHandler = 0;
@@ -60,43 +62,50 @@ public:
 
     virtual void handleSysExEnd(void)
     {
-        DBGL("SysExEnd");
-
-        DBGL("Colors:");
-        for (int i = 0; i < displayHeight; i++) {
-            for (int j = 0; j < displayWidth; j++) {
-                DBG(displayColors[i][j]);
-                DBG(" ");
+        #ifdef SYSEX_DBG
+            DBGL("SysExEnd");
+            DBGL("Colors:");
+            for (int i = 0; i < displayHeight; i++) {
+                for (int j = 0; j < displayWidth; j++) {
+                    DBG(displayColors[i][j]);
+                    DBG(" ");
+                }
+                DBGL(" ");
             }
-            DBGL(" ");
-        }
+        #endif
 
         clearState();
     }
 
     virtual void handleSysExData(unsigned char data)
     {
-        DBG("SysExData ");
-        DBGFL(data, HEX);
+        #ifdef SYSEX_DBG
+            DBG("SysExData ");
+            DBGFL(data, HEX);
+        #endif
 
         if (readingText)
         {
             if (0 == data)
             {
                 if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                    DBG("Ignoring text property with invalid position (");
-                    DBG(hPosition);
-                    DBG(", ");
-                    DBG(vPosition);
-                    DBG("): ");
-                    DBGL(text.c_str());
+                    #ifdef SYSEX_DBG
+                        DBG("Ignoring text property with invalid position (");
+                        DBG(hPosition);
+                        DBG(", ");
+                        DBG(vPosition);
+                        DBG("): ");
+                        DBGL(text.c_str());
+                    #endif
                 } else {
-                    DBG("Finished reading text property (");
-                    DBG(hPosition);
-                    DBG(", ");
-                    DBG(vPosition);
-                    DBG("): ");
-                    DBGL(text.c_str());
+                    #ifdef SYSEX_DBG
+                        DBG("Finished reading text property (");
+                        DBG(hPosition);
+                        DBG(", ");
+                        DBG(vPosition);
+                        DBG("): ");
+                        DBGL(text.c_str());
+                    #endif
 
                     displayStrings[vPosition][hPosition] = text;
 
@@ -127,19 +136,23 @@ public:
         }
         else if (readingColor) {
             if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                DBG("Ignoring color property with invalid position (");
-                DBG(hPosition);
-                DBG(", ");
-                DBG(vPosition);
-                DBG("): ");
-                DBGL(data);
+                #ifdef SYSEX_DBG
+                    DBG("Ignoring color property with invalid position (");
+                    DBG(hPosition);
+                    DBG(", ");
+                    DBG(vPosition);
+                    DBG("): ");
+                    DBGL(data);
+                #endif
             } else {
-                DBG("Finished reading color property (");
-                DBG(hPosition);
-                DBG(", ");
-                DBG(vPosition);
-                DBG("): ");
-                DBGL(data);
+                #ifdef SYSEX_DBG
+                    DBG("Finished reading color property (");
+                    DBG(hPosition);
+                    DBG(", ");
+                    DBG(vPosition);
+                    DBG("): ");
+                    DBGL(data);
+                #endif
 
                 displayColors[vPosition][hPosition] = data;
             }
@@ -152,21 +165,23 @@ public:
             text = "";
         }
         else if (readingValue) {
-            if (hPosition >= displayWidth || vPosition >= displayHeight) {
-                DBG("Ignoring value property with invalid position (");
-                DBG(hPosition);
-                DBG(", ");
-                DBG(vPosition);
-                DBG("): ");
-                DBGL(data);
-            } else {
-                DBG("Finished reading value property (");
-                DBG(hPosition);
-                DBG(", ");
-                DBG(vPosition);
-                DBG("): ");
-                DBGL(data);
-            }
+            #ifdef SYSEX_DBG
+                if (hPosition >= displayWidth || vPosition >= displayHeight) {
+                    DBG("Ignoring value property with invalid position (");
+                    DBG(hPosition);
+                    DBG(", ");
+                    DBG(vPosition);
+                    DBG("): ");
+                    DBGL(data);
+                } else {
+                    DBG("Finished reading value property (");
+                    DBG(hPosition);
+                    DBG(", ");
+                    DBG(vPosition);
+                    DBG("): ");
+                    DBGL(data);
+                }
+            #endif
             
             SpecialMsgHeaderSuccessful = true;
             bytesSkipped = 0;
@@ -203,30 +218,39 @@ public:
 
                 switch (propertyType) {
                     case 1:
-                        DBG("Skipping finished. Reading text (");
-                        DBG(hPosition);
-                        DBG(", ");
-                        DBG(vPosition);
-                        DBGL(")...");
+                        #ifdef SYSEX_DBG
+                            DBG("Skipping finished. Reading text (");
+                            DBG(hPosition);
+                            DBG(", ");
+                            DBG(vPosition);
+                            DBGL(")...");
+                        #endif
+
                         readingText = true;
                         text = "";
                         break;
 
                     case 2:
-                        DBG("Skipping finished. Reading color (");
-                        DBG(hPosition);
-                        DBG(", ");
-                        DBG(vPosition);
-                        DBGL(")...");
+                        #ifdef SYSEX_DBG
+                            DBG("Skipping finished. Reading color (");
+                            DBG(hPosition);
+                            DBG(", ");
+                            DBG(vPosition);
+                            DBGL(")...");
+                        #endif
+
                         readingColor = true;
                         break;
 
                     case 3:
-                        DBG("Skipping finished. Reading value (");
-                        DBG(hPosition);
-                        DBG(", ");
-                        DBG(vPosition);
-                        DBGL(")...");
+                        #ifdef SYSEX_DBG
+                            DBG("Skipping finished. Reading value (");
+                            DBG(hPosition);
+                            DBG(", ");
+                            DBG(vPosition);
+                            DBGL(")...");
+                        #endif
+
                         readingValue = true;
                         break;
 
@@ -243,7 +267,10 @@ public:
         }
         else if (!SpecialMsgEncountered && data == SpecialMsgHeader[0])
         {
-            DBGL("Detected first byte!");
+            #ifdef SYSEX_DBG
+                DBGL("Detected first byte!");
+            #endif
+
             SpecialMsgEncountered = true;
             SpecialMsgHeaderPos++;
         }
@@ -260,7 +287,10 @@ public:
                     SpecialMsgHeaderPos = 0;
                     bytesSkipped = 0;
                     SpecialMsgHeaderSuccessful = true;
-                    DBGL("Finished reading header!");
+
+                    #ifdef SYSEX_DBG
+                        DBGL("Finished reading header!");
+                    #endif
                 }
             }
             else

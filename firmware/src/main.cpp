@@ -2,7 +2,6 @@
 #include "Display.h"
 #include "Midi.h"
 #include "SysexParser.h"
-#include "MidiEncoder.h"
 #include "MidiInfinitePot.h"
 #include "AnalogMux.h"
 
@@ -28,7 +27,13 @@ MidiInfinitePot encoders[numEncoders] = {
     MidiInfinitePot(28, PA0),*/
 };
 
-int encoderValues[numEncoders] = {0, 0/*, 0, 0, 0, 0, 0, 0*/};
+int encoderValuesToDisplay[numEncoders] = {0, 0/*, 0, 0, 0, 0, 0, 0*/};
+
+int valuesReadFromEncoders[numEncoders] = {0, 0};
+int pinAValues[numEncoders];
+int pinBValues[numEncoders];
+
+void dumpEncoderValues();
 
 void onTextRefreshHandler(int hPosition, int vPosition, String text)
 {
@@ -56,11 +61,10 @@ void onCc(unsigned int channel, unsigned int controller, unsigned int value)
     DBG(" = ");
     DBG(value);
     DBG(". Previous value: ");
-    DBGL(encoderValues[encoderIndex]);
+    DBGL(encoderValuesToDisplay[encoderIndex]);
 
-    display.showValue(encoderIndex, encoderValues[encoderIndex], value);
-
-    encoderValues[encoderIndex] = value;
+    display.showValue(encoderIndex, encoderValuesToDisplay[encoderIndex], value);
+    encoderValuesToDisplay[encoderIndex] = value;
   }
 }
 
@@ -69,6 +73,8 @@ void onEncoderTurnedHandler(unsigned int midiCc, int delta)
   int relativeValue = delta >= 0 ? delta : 128 + delta;
 
   midi.sendControlChange(15, midiCc, relativeValue);
+
+  dumpEncoderValues();
 
   DBG("Sending encoder ");
   DBG(midiCc);
@@ -136,17 +142,27 @@ void setup()
 int lastPin1 = HIGH;
 int lastPin2 = HIGH;
 
+void dumpEncoderValues()
+{
+  DBG("Encoder values: ");
+  for (int i = 0; i < numEncoders; i++) {
+    DBG("\t");
+    DBG(pinAValues[i]);
+    DBG("\t");
+    DBG(pinBValues[i]);
+    DBG("\t");
+    DBG(valuesReadFromEncoders[i]);
+  } 
+  DBGL("");
+}
+
 void loop()
 {
   midi.poll();
-
-  int encoderValues[numEncoders];
-  int pinAValues[numEncoders];
-  int pinBValues[numEncoders];
   
   for (int i = 0; i < numEncoders; i++) {
     muxA.selectChannel(i);
-    delayMicroseconds(3000);
+    //delayMicroseconds(3000);
 
     int pinAValue = muxA.getSignal();
     int pinBValue = muxB.getSignal();
@@ -155,18 +171,7 @@ void loop()
     pinBValues[i] = pinBValue;
 
     encoders[i].checkForTurns(pinAValue, pinBValue);
-    encoderValues[i] = encoders[i].getValue();
+    valuesReadFromEncoders[i] = encoders[i].getValue();
     //encoders[i].checkButtonState();
   }
-
-  /*DBG("Encoder values: ");
-  for (int i = 0; i < numEncoders; i++) {
-    DBG("\t");
-    DBG(pinAValues[i]);
-    DBG("\t");
-    DBG(pinBValues[i]);
-    DBG("\t");
-    DBG(encoderValues[i]);
-  } 
-  DBGL("");*/
 }
