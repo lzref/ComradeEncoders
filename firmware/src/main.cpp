@@ -3,28 +3,32 @@
 #include "Midi.h"
 #include "SysexParser.h"
 #include "MidiEncoder.h"
+#include "MidiInfinitePot.h"
+#include "AnalogMux.h"
 
 
 Display display;
 myMidi midi;
 SysexParser sysexParser;
 USBCompositeSerial CompositeSerial;
+AnalogMux muxA(PB0, PA0, PC15, PC13, PC14);
+AnalogMux muxB(PB1, PA0, PC15, PC13, PC14);
 
-const int numEncoders = 8;
+const int numEncoders = 2;
 const int encoder0Cc = 21;
 
-MidiEncoder encoders[numEncoders] = {
-    MidiEncoder(21, PB1, PB10, PB11),
-    MidiEncoder(22, PA15, PB4, PB12),
-    MidiEncoder(23, PA10, PB13, PA9),
-    MidiEncoder(24, PC14, PC15, PC13),
-    MidiEncoder(25, PB6, PB8, PB0),
-    MidiEncoder(26, PB9, PB7, PB5),
-    MidiEncoder(27, PA8, PB15, PB14),
-    MidiEncoder(28, PA1, PA2, PA0),
+MidiInfinitePot encoders[numEncoders] = {
+    MidiInfinitePot(21, PB11),
+    MidiInfinitePot(22, PB12),
+    /*MidiInfinitePot(23, PA9),
+    MidiInfinitePot(24, PC13),
+    MidiInfinitePot(25, PB0),
+    MidiInfinitePot(26, PA1),
+    MidiInfinitePot(27, PB14),
+    MidiInfinitePot(28, PA0),*/
 };
 
-int encoderValues[numEncoders] = {0, 0, 0, 0, 0, 0, 0, 0};
+int encoderValues[numEncoders] = {0, 0/*, 0, 0, 0, 0, 0, 0*/};
 
 void onTextRefreshHandler(int hPosition, int vPosition, String text)
 {
@@ -43,7 +47,7 @@ void onSysexEnd()
 
 void onCc(unsigned int channel, unsigned int controller, unsigned int value)
 {
-  if (controller >= encoder0Cc && controller < encoder0Cc + 8)
+  if (controller >= encoder0Cc && controller < encoder0Cc + numEncoders)
   {
     int encoderIndex = controller - encoder0Cc;
 
@@ -68,8 +72,8 @@ void onEncoderTurnedHandler(unsigned int midiCc, int delta)
 
   DBG("Sending encoder ");
   DBG(midiCc);
-  DBG(" val: ");
-  DBGL(relativeValue);
+  DBG(" delta: ");
+  DBGL(delta);
 }
 
 void onEncoderPressedHandler(unsigned int midiCc)
@@ -84,14 +88,6 @@ void onEncoderReleasedHandler(unsigned int midiCc)
   DBG("Button released: ");
   DBGL(midiCc);
   midi.sendNoteOff(15, midiCc, 0);
-}
-
-void serviceEncoders()
-{
-  for (int i = 0; i < numEncoders; i++)
-  {
-    encoders[i].service();
-  }
 }
 
 void setup()
@@ -112,15 +108,27 @@ void setup()
   midi.setOnCcHandler(onCc);
   sysexParser.setOnTextRefreshHandler(onTextRefreshHandler);
 
-  for (int i = 0; i < numEncoders; i++)
-  {
+  muxA.setup();
+  muxB.setup();
+
+  for (int i = 0; i < numEncoders; i++) {
     encoders[i].setOnEncoderTurnedHandler(onEncoderTurnedHandler);
     encoders[i].setOnEncoderPressedHandler(onEncoderPressedHandler);
     encoders[i].setOnEncoderReleasedHandler(onEncoderReleasedHandler);
-  }
 
-  Timer1.setPeriod(1000);
-  Timer1.attachInterrupt(0, serviceEncoders); 
+    muxA.selectChannel(i);
+    int pinAValue = muxA.getSignal();
+    int pinBValue = muxB.getSignal();
+
+    DBG("Initial values for encoder ");
+    DBG(i);
+    DBG(":\t");
+    DBG(pinAValue);
+    DBG("\t");
+    DBGL(pinBValue);
+
+    encoders[i].setup(pinAValue, pinBValue);
+  }
 
   DBGL("...hooks are set up. Setup is finished");
 }
@@ -132,9 +140,33 @@ void loop()
 {
   midi.poll();
 
-  for (int i = 0; i < numEncoders; i++)
-  {
-    encoders[i].checkForTurns();
-    encoders[i].checkButtonState();
+  int encoderValues[numEncoders];
+  int pinAValues[numEncoders];
+  int pinBValues[numEncoders];
+  
+  for (int i = 0; i < numEncoders; i++) {
+    muxA.selectChannel(i);
+    delayMicroseconds(3000);
+
+    int pinAValue = muxA.getSignal();
+    int pinBValue = muxB.getSignal();
+
+    pinAValues[i] = pinAValue;
+    pinBValues[i] = pinBValue;
+
+    encoders[i].checkForTurns(pinAValue, pinBValue);
+    encoderValues[i] = encoders[i].getValue();
+    //encoders[i].checkButtonState();
   }
+
+  /*DBG("Encoder values: ");
+  for (int i = 0; i < numEncoders; i++) {
+    DBG("\t");
+    DBG(pinAValues[i]);
+    DBG("\t");
+    DBG(pinBValues[i]);
+    DBG("\t");
+    DBG(encoderValues[i]);
+  } 
+  DBGL("");*/
 }
