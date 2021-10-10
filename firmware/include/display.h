@@ -28,11 +28,11 @@
 #define WHITE   0xFFFF
 
 const int xDist = 80;
-const int yDist = 40;
-const int yValDist = 20;
+const int yDist = 30;
+const int yValDist = 14;
 const int textSize = 1;
 const int outerBoxSizeX = 76;
-const int outerBoxSizeY = 19;
+const int outerBoxSizeY = 14;
 const int innerBoxSizeX = outerBoxSizeX - 4;
 const int innerBoxSizeY = outerBoxSizeY - 4;
 
@@ -107,7 +107,7 @@ public:
         setRotation(3);
         //invertDisplay(true);
 
-        for (int i = 0; i <= 8; i++) {
+        for (int i = 0; i < 16; i++) {
             drawBoundingBox(i, 0);
             drawBoundingBox(i, 1);
             drawBoundingBox(i, 2);

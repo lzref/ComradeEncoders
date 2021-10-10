@@ -13,23 +13,33 @@ USBCompositeSerial CompositeSerial;
 AnalogMux muxA(PB0, PA0, PC15, PC13, PC14);
 AnalogMux muxB(PB1, PA0, PC15, PC13, PC14);
 
-const int numEncoders = 2;
+const int numEncoders = 16;
 const int encoder0Cc = 21;
+
+uint32 lastTime;
 
 MidiInfinitePot encoders[numEncoders] = {
     MidiInfinitePot(21, PB11),
     MidiInfinitePot(22, PB12),
-    /*MidiInfinitePot(23, PA9),
+    MidiInfinitePot(23, PA9),
     MidiInfinitePot(24, PC13),
     MidiInfinitePot(25, PB0),
     MidiInfinitePot(26, PA1),
     MidiInfinitePot(27, PB14),
-    MidiInfinitePot(28, PA0),*/
+    MidiInfinitePot(28, PA0),
+    MidiInfinitePot(29, PB11),
+    MidiInfinitePot(30, PB12),
+    MidiInfinitePot(31, PA9),
+    MidiInfinitePot(32, PC13),
+    MidiInfinitePot(33, PB0),
+    MidiInfinitePot(34, PA1),
+    MidiInfinitePot(35, PB14),
+    MidiInfinitePot(36, PA0)
 };
 
-int encoderValuesToDisplay[numEncoders] = {0, 0/*, 0, 0, 0, 0, 0, 0*/};
+int encoderValuesToDisplay[numEncoders] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/**/};
 
-int valuesReadFromEncoders[numEncoders] = {0, 0};
+int valuesReadFromEncoders[numEncoders] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0/**/};
 int pinAValues[numEncoders];
 int pinBValues[numEncoders];
 
@@ -38,6 +48,7 @@ void dumpEncoderValues();
 void onTextRefreshHandler(int hPosition, int vPosition, String text)
 {
   display.printMessage(hPosition, vPosition, text);
+  display.printMessage(hPosition + 8, vPosition, text);
 }
 
 void onSysexData(unsigned char data)
@@ -64,6 +75,7 @@ void onCc(unsigned int channel, unsigned int controller, unsigned int value)
     DBGL(encoderValuesToDisplay[encoderIndex]);
 
     display.showValue(encoderIndex, encoderValuesToDisplay[encoderIndex], value);
+    display.showValue(encoderIndex + 8, encoderValuesToDisplay[encoderIndex], value);
     encoderValuesToDisplay[encoderIndex] = value;
   }
 }
@@ -137,6 +149,8 @@ void setup()
   }
 
   DBGL("...hooks are set up. Setup is finished");
+
+  lastTime = micros();
 }
 
 int lastPin1 = HIGH;
@@ -156,6 +170,9 @@ void dumpEncoderValues()
   DBGL("");
 }
 
+uint32 loopCnt = 0;
+const int printPeriod = 1000;
+
 void loop()
 {
   midi.poll();
@@ -173,5 +190,13 @@ void loop()
     encoders[i].checkForTurns(pinAValue, pinBValue);
     valuesReadFromEncoders[i] = encoders[i].getValue();
     //encoders[i].checkButtonState();
+  }
+
+  if (printPeriod - 1 == loopCnt++ % printPeriod) {
+    int newLoopTime = micros();
+    DBG("Loop time: ");
+    DBGL((newLoopTime - lastTime) / printPeriod);
+
+    lastTime = newLoopTime;
   }
 }
