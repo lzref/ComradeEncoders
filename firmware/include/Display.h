@@ -104,7 +104,7 @@ public:
         begin();
 
         fillScreen(GREEN);
-        setRotation(3);
+        setRotation(1);
         //invertDisplay(true);
 
         for (int i = 0; i <= 8; i++) {

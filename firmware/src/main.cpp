@@ -14,14 +14,14 @@ const int numEncoders = 8;
 const int encoder0Cc = 21;
 
 MidiEncoder encoders[numEncoders] = {
-    MidiEncoder(21, PB1, PB10, PB11),
-    MidiEncoder(22, PA15, PB4, PB12),
-    MidiEncoder(23, PA10, PB13, PA9),
-    MidiEncoder(24, PC14, PC15, PC13),
-    MidiEncoder(25, PB6, PB8, PB0),
-    MidiEncoder(26, PB9, PB7, PB5),
-    MidiEncoder(27, PA8, PB15, PB14),
-    MidiEncoder(28, PA1, PA2, PA0),
+    MidiEncoder(21, PB5, PB7, PB6),
+    MidiEncoder(22, PB13, PB14, PB12),
+    MidiEncoder(23, PB10, PB11, PB1),
+    MidiEncoder(24, PB9, PC13, PB8),
+    MidiEncoder(25, PA10, PA15, PB15),
+    MidiEncoder(26, PA8, PA9, PB15),
+    MidiEncoder(27, PA2, PA1, PB0),
+    MidiEncoder(28, PC15, PA0, PC14),
 };
 
 int encoderValues[numEncoders] = {0, 0, 0, 0, 0, 0, 0, 0};
