@@ -4,7 +4,7 @@
   "name": "ComradeEncoders",
   "content": "",
   "created_at": "2021-09-29 21:23:03",
-  "updated_at": "2021-09-30 01:01:19",
+  "updated_at": "2021-11-06 21:58:29",
   "stick": "",
   "documents": [
     {
@@ -12,7 +12,7 @@
       "title": "Schematic",
       "description": "",
       "docType": "1",
-      "master": "",
+      "master": "903b7ba1da683e040e1a31a0cde91994",
       "thumb": "/images/thumb-default.png",
       "components": {
         "743746a5acfa4ac7be4b52753d51a44c": 1,
@@ -83,11 +83,11 @@
           }
         ]
       ],
-      "updateTime": 1632987846,
+      "updateTime": 1636261109,
       "createTime": 1632975906,
       "histories": [],
       "created_at": "2021-09-29 21:25:06",
-      "updated_at": "2021-09-30 00:44:06"
+      "updated_at": "2021-11-06 21:58:29"
     },
     {
       "uuid": "d2e88923c9ebe6575982e3a1f6bb74a6",
@@ -105,16 +105,16 @@
         "87337b3d4e8c411dac907b5a05555363": 8
       },
       "BOM": [],
-      "updateTime": 1632988879,
+      "updateTime": 1636261045,
       "createTime": 1632977974,
       "histories": [],
       "created_at": "2021-09-29 21:59:34",
-      "updated_at": "2021-09-30 01:01:19"
+      "updated_at": "2021-11-06 21:57:25"
     }
   ],
   "sort": [],
   "title": "ComradeEncoders",
   "foldername": "ComradeEncoders",
   "schfilename": "ComradeEncoders.json",
-  "schfilemtime": 1632987846988
+  "schfilemtime": 1636261109213
 }
